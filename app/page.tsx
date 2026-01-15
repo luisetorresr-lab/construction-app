@@ -246,12 +246,17 @@ export default function Home() {
     }
   };
 
+  // Calculate metrics
+  const totalBudget = projects.reduce((sum, p) => sum + (p.total_budget || 0), 0);
+  const activeProjects = projects.filter(p => p.status === 'Active').length;
+  const pendingApprovals = drawRequests.filter(r => r.status === 'Pending').length;
+
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Checking authentication...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-700"></div>
+          <p className="mt-4 text-zinc-400">Checking authentication...</p>
         </div>
       </div>
     );
@@ -259,10 +264,10 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Loading projects...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-700"></div>
+          <p className="mt-4 text-zinc-400">Loading projects...</p>
         </div>
       </div>
     );
@@ -270,146 +275,141 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 text-lg">Error: {error}</p>
+          <p className="text-red-400 text-lg">Error: {error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Top bar with Sign Out button */}
-        <div className="flex justify-end mb-4">
+    <div className="min-h-screen bg-[#09090b] flex">
+      {/* Fixed Sidebar */}
+      <div className="fixed left-0 top-0 h-screen w-64 bg-[#18181b] border-r border-zinc-800 flex flex-col">
+        {/* Logo */}
+        <div className="p-6 border-b border-zinc-800">
+          <h1 className="text-xl font-bold text-white">ConstructionOS</h1>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1">
+          <a href="#" className="block px-3 py-2 text-sm font-medium text-white bg-zinc-800 rounded-md">
+            Dashboard
+          </a>
+          <a href="#" className="block px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors">
+            Projects
+          </a>
+          <a href="#" className="block px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors">
+            Settings
+          </a>
+        </nav>
+
+        {/* User Profile */}
+        <div className="p-4 border-t border-zinc-800">
           <button
             onClick={handleSignOut}
-            className="text-sm text-gray-600 hover:text-gray-900 font-medium py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+            className="w-full px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors text-left"
           >
             Sign Out
           </button>
         </div>
+      </div>
 
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-          <button
-            onClick={() => {
-              setFormData({ name: '', total_budget: '', status: 'Not Started' });
-              setIsModalOpen(true);
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-          >
-            New Project
-          </button>
-        </div>
-        
-        {projects.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No projects found</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6 border border-gray-200"
-              >
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  {project.name || 'Unnamed Project'}
-                </h2>
-                {project.description && (
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {project.description}
-                  </p>
-                )}
-                <div className="space-y-2 mb-4">
-                  {project.total_budget !== null && project.total_budget !== undefined && (
-                    <p className="text-gray-700">
-                      <span className="font-medium">Budget:</span> ${project.total_budget.toLocaleString()}
-                    </p>
-                  )}
-                  {project.status && (
-                    <p className="text-gray-700">
-                      <span className="font-medium">Status:</span>{' '}
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        project.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                        project.status === 'Active' ? 'bg-blue-100 text-blue-800' :
-                        project.status === 'Delayed' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {project.status}
-                      </span>
-                    </p>
-                  )}
-                </div>
-                {project.created_at && (
-                  <p className="text-sm text-gray-400">
-                    {new Date(project.created_at).toLocaleDateString()}
-                  </p>
-                )}
+      {/* Main Content */}
+      <div className="flex-1 ml-64">
+        <div className="p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+                <p className="mt-2 text-sm text-zinc-400">Manage your construction projects and draw requests</p>
               </div>
-            ))}
+              <button
+                onClick={() => {
+                  setFormData({ name: '', total_budget: '', status: 'Not Started' });
+                  setIsModalOpen(true);
+                }}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                New Project
+              </button>
+            </div>
           </div>
-        )}
 
-        {/* Recent Draw Requests Section */}
-        <div className="mt-16">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Recent Draw Requests</h2>
-            <button
-              onClick={() => {
-                setDrawRequestFormData({ project_id: '', description: '', amount: '' });
-                setIsDrawRequestModalOpen(true);
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-            >
-              Submit Draw Request
-            </button>
+          {/* Metrics Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-[#18181b] border border-zinc-800 rounded-lg p-6">
+              <p className="text-sm text-zinc-400 mb-2">Total Budget</p>
+              <p className="text-2xl font-bold text-white">${totalBudget.toLocaleString()}</p>
+            </div>
+            <div className="bg-[#18181b] border border-zinc-800 rounded-lg p-6">
+              <p className="text-sm text-zinc-400 mb-2">Active Projects</p>
+              <p className="text-2xl font-bold text-white">{activeProjects}</p>
+            </div>
+            <div className="bg-[#18181b] border border-zinc-800 rounded-lg p-6">
+              <p className="text-sm text-zinc-400 mb-2">Pending Approval</p>
+              <p className="text-2xl font-bold text-white">{pendingApprovals}</p>
+            </div>
           </div>
-          
-          {drawRequestsLoading ? (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              <p className="mt-4 text-gray-600">Loading draw requests...</p>
+
+          {/* Draw Requests Table */}
+          <div className="bg-[#18181b] border border-zinc-800 rounded-lg overflow-hidden">
+            <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white">Draw Requests</h2>
+              <button
+                onClick={() => {
+                  setDrawRequestFormData({ project_id: '', description: '', amount: '' });
+                  setIsDrawRequestModalOpen(true);
+                }}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
+              >
+                Submit Draw Request
+              </button>
             </div>
-          ) : drawRequests.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-500 text-lg">No active draw requests</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            
+            {drawRequestsLoading ? (
+              <div className="p-8 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-700"></div>
+                <p className="mt-4 text-zinc-400">Loading draw requests...</p>
+              </div>
+            ) : drawRequests.length === 0 ? (
+              <div className="p-8 text-center">
+                <p className="text-zinc-400 text-lg">No active draw requests</p>
+              </div>
+            ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-zinc-800">
+                  <thead className="bg-[#18181b]">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
                         Project Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
                         Description
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
                         Amount
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-[#18181b] divide-y divide-zinc-800">
                     {drawRequests.map((request) => (
-                      <tr key={request.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={request.id} className="hover:bg-zinc-900/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                           {request.projects?.name || 'Unknown Project'}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
+                        <td className="px-6 py-4 text-sm text-zinc-400">
                           {request.description || '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                           {request.amount !== null && request.amount !== undefined
                             ? `$${request.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             : '-'}
@@ -417,15 +417,18 @@ export default function Home() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {request.status ? (
                             <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                              request.status === 'Completed' || request.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                              request.status === 'Active' || request.status === 'Pending' ? 'bg-blue-100 text-blue-800' :
-                              request.status === 'Delayed' || request.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
+                              request.status === 'Completed' || request.status === 'Approved' 
+                                ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                              request.status === 'Active' || request.status === 'Pending' 
+                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                              request.status === 'Delayed' || request.status === 'Rejected' 
+                                ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                              'bg-zinc-800 text-zinc-400 border border-zinc-700'
                             }`}>
                               {request.status}
                             </span>
                           ) : (
-                            '-'
+                            <span className="text-zinc-400">-</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -434,13 +437,13 @@ export default function Home() {
                               <>
                                 <button
                                   onClick={() => handleApprovePayment(request.id)}
-                                  className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-3 rounded transition-colors duration-200"
+                                  className="bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-medium py-1 px-3 rounded border border-green-500/30 transition-colors duration-200"
                                 >
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => handleRejectPayment(request.id)}
-                                  className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-3 rounded transition-colors duration-200"
+                                  className="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium py-1 px-3 rounded border border-red-500/30 transition-colors duration-200"
                                 >
                                   Reject
                                 </button>
@@ -452,7 +455,7 @@ export default function Home() {
                                   <DrawRequestPDF
                                     project={{
                                       name: request.projects?.name || 'Unknown Project',
-                                      address: '', // Address can be added later if available in the projects table
+                                      address: '',
                                     }}
                                     payment={{
                                       id: request.id,
@@ -463,7 +466,7 @@ export default function Home() {
                                   />
                                 }
                                 fileName={`draw-request-${request.id}.pdf`}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded transition-colors duration-200"
+                                className="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 text-xs font-medium py-1 px-3 rounded border border-indigo-500/30 transition-colors duration-200"
                               >
                                 {({ loading }) => (loading ? 'Generating...' : 'Download PDF')}
                               </PDFDownloadLink>
@@ -475,21 +478,21 @@ export default function Home() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#18181b] border border-zinc-800 rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">Create New Project</h2>
+              <h2 className="text-2xl font-bold text-white">Create New Project</h2>
               <button
                 onClick={handleCloseModal}
                 disabled={isSubmitting}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-bold disabled:opacity-50"
+                className="text-zinc-400 hover:text-white text-2xl font-bold disabled:opacity-50 transition-colors"
               >
                 ×
               </button>
@@ -497,7 +500,7 @@ export default function Home() {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="name" className="block text-sm font-medium text-zinc-400 mb-1">
                   Name *
                 </label>
                 <input
@@ -506,14 +509,14 @@ export default function Home() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 bg-[#09090b] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
                   placeholder="Enter project name"
                   disabled={isSubmitting}
                 />
               </div>
 
               <div>
-                <label htmlFor="total_budget" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="total_budget" className="block text-sm font-medium text-zinc-400 mb-1">
                   Total Budget
                 </label>
                 <input
@@ -523,14 +526,14 @@ export default function Home() {
                   min="0"
                   value={formData.total_budget}
                   onChange={(e) => setFormData({ ...formData, total_budget: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 bg-[#09090b] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
                   placeholder="Enter budget amount"
                   disabled={isSubmitting}
                 />
               </div>
 
               <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="status" className="block text-sm font-medium text-zinc-400 mb-1">
                   Status
                 </label>
                 <select
@@ -541,7 +544,7 @@ export default function Home() {
                     const newStatus = e.target.value;
                     setFormData(prev => ({ ...prev, status: newStatus }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 bg-[#09090b] border border-zinc-800 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
                   disabled={isSubmitting}
                 >
                   <option value="Not Started">Not Started</option>
@@ -556,14 +559,14 @@ export default function Home() {
                   type="button"
                   onClick={handleCloseModal}
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 border border-zinc-800 rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white font-medium transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Project'}
                 </button>
@@ -575,14 +578,14 @@ export default function Home() {
 
       {/* Draw Request Modal */}
       {isDrawRequestModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#18181b] border border-zinc-800 rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">Submit Draw Request</h2>
+              <h2 className="text-2xl font-bold text-white">Submit Draw Request</h2>
               <button
                 onClick={handleCloseDrawRequestModal}
                 disabled={isSubmittingDrawRequest}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-bold disabled:opacity-50"
+                className="text-zinc-400 hover:text-white text-2xl font-bold disabled:opacity-50 transition-colors"
               >
                 ×
               </button>
@@ -590,7 +593,7 @@ export default function Home() {
             
             <form onSubmit={handleSubmitDrawRequest} className="space-y-4">
               <div>
-                <label htmlFor="draw_request_project" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="draw_request_project" className="block text-sm font-medium text-zinc-400 mb-1">
                   Project *
                 </label>
                 <select
@@ -602,7 +605,7 @@ export default function Home() {
                     const newProjectId = e.target.value;
                     setDrawRequestFormData(prev => ({ ...prev, project_id: newProjectId }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 bg-[#09090b] border border-zinc-800 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
                   disabled={isSubmittingDrawRequest}
                 >
                   <option value="">Select a project</option>
@@ -615,7 +618,7 @@ export default function Home() {
               </div>
 
               <div>
-                <label htmlFor="draw_request_description" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="draw_request_description" className="block text-sm font-medium text-zinc-400 mb-1">
                   Description
                 </label>
                 <input
@@ -625,14 +628,14 @@ export default function Home() {
                   onChange={(e) => {
                     setDrawRequestFormData(prev => ({ ...prev, description: e.target.value }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 bg-[#09090b] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
                   placeholder="Enter description"
                   disabled={isSubmittingDrawRequest}
                 />
               </div>
 
               <div>
-                <label htmlFor="draw_request_amount" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="draw_request_amount" className="block text-sm font-medium text-zinc-400 mb-1">
                   Amount
                 </label>
                 <input
@@ -644,7 +647,7 @@ export default function Home() {
                   onChange={(e) => {
                     setDrawRequestFormData(prev => ({ ...prev, amount: e.target.value }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 bg-[#09090b] border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
                   placeholder="Enter amount"
                   disabled={isSubmittingDrawRequest}
                 />
@@ -655,14 +658,14 @@ export default function Home() {
                   type="button"
                   onClick={handleCloseDrawRequestModal}
                   disabled={isSubmittingDrawRequest}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 border border-zinc-800 rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white font-medium transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingDrawRequest}
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmittingDrawRequest ? 'Submitting...' : 'Submit'}
                 </button>
