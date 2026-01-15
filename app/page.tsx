@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { supabase } from '@/lib/supabase';
 import DrawRequestPDF from './components/DrawRequestPDF';
+import BudgetChart from './components/BudgetChart';
 
 interface Project {
   id: string;
@@ -251,6 +252,19 @@ export default function Home() {
   const activeProjects = projects.filter(p => p.status === 'Active').length;
   const pendingApprovals = drawRequests.filter(r => r.status === 'Pending').length;
 
+  // Calculate chart data: total spent per project
+  const chartData = projects.map((project) => {
+    const totalSpent = drawRequests
+      .filter((request) => request.project_id === project.id)
+      .reduce((sum, request) => sum + (request.amount || 0), 0);
+
+    return {
+      name: project.name || 'Unnamed Project',
+      budget: project.total_budget || 0,
+      spent: totalSpent,
+    };
+  });
+
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
@@ -351,6 +365,16 @@ export default function Home() {
             <div className="bg-[#18181b] border border-zinc-800 rounded-lg p-6">
               <p className="text-sm text-zinc-400 mb-2">Pending Approval</p>
               <p className="text-2xl font-bold text-white">{pendingApprovals}</p>
+            </div>
+          </div>
+
+          {/* Budget vs Actual Spend Chart */}
+          <div className="bg-[#18181b] border border-zinc-800 rounded-lg overflow-hidden mb-8">
+            <div className="p-6 border-b border-zinc-800">
+              <h2 className="text-lg font-semibold text-white">Budget vs. Actual Spend</h2>
+            </div>
+            <div className="p-6">
+              <BudgetChart projects={chartData} />
             </div>
           </div>
 
