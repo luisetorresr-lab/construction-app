@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-// ⚠️ PASTE YOUR REAL STRINGS INSIDE THE QUOTES BELOW ⚠️
-const supabaseUrl = "https://nidkpphgcjqjiwedaqbm.supabase.co"
-const supabaseAnonKey = "sb_publishable_9J12QG_LzCCkSxGBC780AA_KPLU7rH_" // Paste your full key here
+// process.env reads from your .env.local file
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+// This validation helps debug if the file isn't being read
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase Environment Variables. Check .env.local')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

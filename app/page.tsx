@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 import { supabase } from '@/lib/supabase';
+import DrawRequestPDF from './components/DrawRequestPDF';
 
 interface Project {
   id: string;
@@ -33,6 +35,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [drawRequestsLoading, setDrawRequestsLoading] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,6 +98,10 @@ export default function Home() {
       setDrawRequestsLoading(false);
     }
   };
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -422,22 +429,46 @@ export default function Home() {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {request.status === 'Pending' ? (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleApprovePayment(request.id)}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-3 rounded transition-colors duration-200"
+                          <div className="flex gap-2 items-center">
+                            {request.status === 'Pending' ? (
+                              <>
+                                <button
+                                  onClick={() => handleApprovePayment(request.id)}
+                                  className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-3 rounded transition-colors duration-200"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRejectPayment(request.id)}
+                                  className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-3 rounded transition-colors duration-200"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            ) : null}
+                            {isMounted && (
+                              <PDFDownloadLink
+                                document={
+                                  <DrawRequestPDF
+                                    project={{
+                                      name: request.projects?.name || 'Unknown Project',
+                                      address: '', // Address can be added later if available in the projects table
+                                    }}
+                                    payment={{
+                                      id: request.id,
+                                      amount: request.amount || 0,
+                                      description: request.description || '',
+                                      date: request.created_at || new Date().toISOString(),
+                                    }}
+                                  />
+                                }
+                                fileName={`draw-request-${request.id}.pdf`}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded transition-colors duration-200"
                               >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => handleRejectPayment(request.id)}
-                                className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-3 rounded transition-colors duration-200"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          ) : null}
+                                {({ loading }) => (loading ? 'Generating...' : 'Download PDF')}
+                              </PDFDownloadLink>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
